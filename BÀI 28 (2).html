@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Game Show - Hàm Số Bậc Nhất</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.3);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin: 30px 0;
+        }
+
+        label {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .question-number {
+            font-size: 1.3em;
+            color: #4ecdc4;
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            padding: 10px 25px;
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 10px;
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .timer.warning {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .score {
+            font-size: 1.3em;
+            color: #ffd93d;
+        }
+
+        .question-text {
+            font-size: 1.4em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .answers {
+            display: grid;
+            gap: 15px;
+        }
+
+        .answer-btn {
+            padding: 20px;
+            font-size: 1.1em;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transition: all 0.3s;
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: #4ecdc4;
+            transform: translateX(10px);
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .answer-btn.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+            animation: correctAnim 0.5s;
+        }
+
+        .answer-btn.wrong {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: #f44336;
+            animation: wrongAnim 0.5s;
+        }
+
+        @keyframes correctAnim {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wrongAnim {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .result-screen {
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #ffd93d;
+            margin: 30px 0;
+            text-shadow: 0 0 20px rgba(255, 217, 61, 0.5);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-item {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-table th {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            font-size: 1.1em;
+        }
+
+        .leaderboard-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-table tr.highlight {
+            background: rgba(255, 217, 61, 0.2);
+            border-left: 4px solid #ffd93d;
+        }
+
+        .medal {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd93d;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #4ecdc4;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .timer {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Game Show Ôn Tập</h1>
+
+        <!-- Màn hình bắt đầu -->
+        <div id="startScreen" class="screen active">
+            <div class="input-group">
+                <label for="playerName">👤 Nhập tên của bạn:</label>
+                <input type="text" id="playerName" placeholder="Tên của bạn..." maxlength="30">
+            </div>
+            <button class="btn-primary" onclick="startGame()">🚀 Bắt Đầu Chơi</button>
+            <button class="btn-secondary" onclick="showLeaderboard()">🏆 Bảng Xếp Hạng</button>
+        </div>
+
+        <!-- Màn hình câu hỏi -->
+        <div id="gameScreen" class="screen">
+            <div class="question-header">
+                <div class="question-number">Câu <span id="currentQuestion">1</span>/11</div>
+                <div class="timer" id="timer">30</div>
+                <div class="score">💰 <span id="score">0</span> điểm</div>
+            </div>
+            <div class="question-text" id="questionText"></div>
+            <div class="answers" id="answersContainer"></div>
+        </div>
+
+        <!-- Màn hình kết quả -->
+        <div id="resultScreen" class="screen">
+            <h2>🎉 Hoàn Thành!</h2>
+            <div class="final-score">
+                <span id="finalScore">0</span> điểm
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Số câu đúng</div>
+                    <div class="stat-value"><span id="correctCount">0</span>/11</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Tổng thời gian</div>
+                    <div class="stat-value"><span id="totalTime">0</span>s</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Độ chính xác</div>
+                    <div class="stat-value"><span id="accuracy">0</span>%</div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="showLeaderboard()">🏆 Xem Bảng Xếp Hạng</button>
+            <button class="btn-secondary" onclick="resetGame()">🔄 Chơi Lại</button>
+        </div>
+
+        <!-- Màn hình bảng xếp hạng -->
+        <div id="leaderboardScreen" class="screen">
+            <h2>🏆 Bảng Xếp Hạng</h2>
+            <div id="leaderboardContent" class="loading">Đang tải...</div>
+            <button class="btn-secondary" onclick="backToStart()">⬅️ Quay Lại</button>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu câu hỏi về Hàm Số Bậc Nhất
+        const questions = [
+            {
+                question: "Hàm số bậc nhất được cho bởi công thức nào sau đây?",
+                answers: ["y = ax² + bx + c", "y = ax + b (a ≠ 0)", "y = a/x", "y = √x"],
+                correct: 1,
+                time: 40
+            },
+            {
+                question: "Đồ thị của hàm số y = ax + b với a ≠ 0 là gì?",
+                answers: ["Một đường thẳng", "Một đoạn thẳng", "Một đường cong", "Một Parabol"],
+                correct: 0,
+                time: 35
+            },
+            {
+                question: "Khi a ≠ 0 thì đồ thị của hàm số y = ax + b luôn đi qua điểm nào?",
+                answers: ["(0; a)", "(0; b)", "(b; 0)", "(a; b)"],
+                correct: 1,
+                time: 50
+            },
+            {
+                question: "Trong các hàm số sau, hàm số nào là hàm số bậc nhất?",
+                answers: ["y = 2x² + 1", "y = 3x - 5", "y = 1/x", "y = x³"],
+                correct: 1,
+                time: 45
+            },
+            {
+                question: "Đồ thị của hàm số y = 2x + 3 giao với trục tung tại điểm M có tọa độ là",
+                answers: ["M(0; 2)", "M(0; 3)", "M(3; 0)", "M(2; 0)"],
+                correct: 1,
+                time: 55
+            },
+            {
+                question: "Đồ thị của hàm số y = 2x - 4 giao với trục hoành tại điểm nào?",
+                answers: ["(0; -4)", "(2; 0)", "(-4; 0)", "(0; 2)"],
+                correct: 1,
+                time: 60
+            },
+            {
+                question: "Cho hàm số y = -3x + 6. Đồ thị của hàm số đi qua điểm nào sau đây?",
+                answers: ["(1; 3)", "(2; 1)", "(0; 3)", "(3; 0)"],
+                correct: 0,
+                time: 70
+            },
+            {
+                question: "Cho hàm số bậc nhất y = ax + 3 với a là hệ số của x. Để đồ thị của hàm số đi qua điểm A(1; 5) thì giá trị của a là:",
+                answers: ["a = 1", "a = 2", "a = 3", "a = 4"],
+                correct: 1,
+                time: 80
+            },
+            {
+                question: "Đồ thị của hàm số bậc nhất y = ax + b luôn cắt trục tung tại điểm có tung độ là",
+                answers: ["a", "b", "0", "a + b"],
+                correct: 1,
+                time: 50
+            },
+            {
+                question: "Hệ số góc a của đường thẳng y = -2x + 5 là",
+                answers: ["a = 5", "a = 2", "a = -2", "a = -5"],
+                correct: 2,
+                time: 40
+            },
+            {
+                question: "Biến đổi hàm số y = 3(x - 1) + 2 về hàm số bậc nhất ta được",
+                answers: ["y = 3x - 1", "y = 3x + 2", "y = 3x - 3", "y = 3x - 1"],
+                correct: 0,
+                time: 75
+            }
+        ];
+
+        // Biến game
+        let playerName = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let totalTimeSpent = 0;
+        let timer;
+        let timeLeft;
+        let shuffledQuestions = [];
+        let startTime;
+
+        // Audio Context cho âm thanh
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playTickSound() {
+            playSound(800, 0.1);
+        }
+
+        function playCorrectSound() {
+            playSound(523.25, 0.1);
+            setTimeout(() => playSound(659.25, 0.1), 100);
+            setTimeout(() => playSound(783.99, 0.2), 200);
+        }
+
+        function playWrongSound() {
+            playSound(200, 0.3, 'sawtooth');
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('playerName').value.trim();
+            if (!nameInput) {
+                alert('Vui lòng nhập tên của bạn!');
+                return;
+            }
+            
+            playerName = nameInput;
+            score = 0;
+            correctAnswers = 0;
+            totalTimeSpent = 0;
+            currentQuestionIndex = 0;
+            
+            // Shuffle câu hỏi
+            shuffledQuestions = shuffle(questions);
+            
+            showScreen('gameScreen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            startTime = Date.now();
+            
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('score').textContent = score;
+            
+            // Shuffle đáp án
+            const answersWithIndex = question.answers.map((answer, index) => ({
+                text: answer,
+                isCorrect: index === question.correct
+            }));
+            const shuffledAnswers = shuffle(answersWithIndex);
+            
+            const answersContainer = document.getElementById('answersContainer');
+            answersContainer.innerHTML = '';
+            
+            shuffledAnswers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = `${String.fromCharCode(65 + index)}. ${answer.text}`;
+                button.onclick = () => selectAnswer(answer.isCorrect, button);
+                answersContainer.appendChild(button);
+            });
+            
+            // Bắt đầu đếm ngược
+            timeLeft = question.time;
+            updateTimer();
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 5) {
+                    playTickSound();
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    selectAnswer(false, null);
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timeLeft;
+            
+            if (timeLeft <= 5) {
+                timerElement.classList.add('warning');
+            } else {
+                timerElement.classList.remove('warning');
+            }
+        }
+
+        function selectAnswer(isCorrect, button) {
+            clearInterval(timer);
+            
+            const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+            totalTimeSpent += timeSpent;
+            
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (isCorrect) {
+                if (button) button.classList.add('correct');
+                correctAnswers++;
+                
+                // Tính điểm thưởng theo tốc độ
+                const maxTime = shuffledQuestions[currentQuestionIndex].time;
+                const speedBonus = Math.floor((timeLeft / maxTime) * 1000);
+                score += speedBonus;
+                document.getElementById('score').textContent = score;
+                
+                playCorrectSound();
+                createConfetti();
+            } else {
+                if (button) button.classList.add('wrong');
+                playWrongSound();
+                
+                // Highlight đáp án đúng
+                buttons.forEach(btn => {
+                    const answerText = btn.textContent.substring(3);
+                    const correctAnswer = shuffledQuestions[currentQuestionIndex].answers[shuffledQuestions[currentQuestionIndex].correct];
+                    if (answerText === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 2000);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.background = ['#ff6b6b', '#4ecdc4', '#ffd93d', '#95e1d3'][Math.floor(Math.random() * 4)];
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function endGame() {
+            showScreen('resultScreen');
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('totalTime').textContent = totalTimeSpent;
+            document.getElementById('accuracy').textContent = Math.round((correctAnswers / questions.length) * 100);
+            
+            // Lưu kết quả
+            saveToLeaderboard();
+        }
+
+        function saveToLeaderboard() {
+            const result = {
+                name: playerName,
+                score: score,
+                correct: correctAnswers,
+                time: totalTimeSpent,
+                date: new Date().toLocaleDateString('vi-VN')
+            };
+            
+            let leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            leaderboard.push(result);
+            leaderboard.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.time - b.time;
+            });
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+        }
+
+        function showLeaderboard() {
+            showScreen('leaderboardScreen');
+            
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+            const content = document.getElementById('leaderboardContent');
+            
+            if (leaderboard.length === 0) {
+                content.innerHTML = '<p style="text-align: center; padding: 40px;">Chưa có dữ liệu. Hãy là người đầu tiên!</p>';
+                return;
+            }
+            
+            let html = '<table class="leaderboard-table"><thead><tr><th>Hạng</th><th>Tên</th><th>Điểm</th><th>Đúng</th><th>Thời gian</th><th>Ngày</th></tr></thead><tbody>';
+            
+            leaderboard.forEach((entry, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                const highlight = entry.name === playerName ? 'highlight' : '';
+                html += `<tr class="${highlight}">
+                    <td><span class="medal">${medal}</span>${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.score}</td>
+                    <td>${entry.correct}/11</td>
+                    <td>${entry.time}s</td>
+                    <td>${entry.date}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            content.innerHTML = html;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function resetGame() {
+            showScreen('startScreen');
+        }
+
+        function backToStart() {
+            showScreen('startScreen');
+        }
+
+        // Khởi tạo
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') startGame();
+        });
+    </script>
+</body>
+</html>
+
